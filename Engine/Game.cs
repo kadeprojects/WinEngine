@@ -23,7 +23,7 @@ namespace WinEngine.Engine
         {
             base.OnLoad();
 
-            GL.ClearColor(0f, 0f, 0f, 1f);
+            GL.ClearColor(0.4f, 0.4f, 0.4f, 1f);
 
             Render.InitRendering();
 
@@ -36,9 +36,9 @@ namespace WinEngine.Engine
 
             Rect r = new Rect();
             r.x = 200;
-            r.y = 200;
-            r.w = testTex.ImageData.w;
-            r.h = testTex.ImageData.h;
+            r.y = 100;
+            r.w = (int)(testTex.ImageData.w * 0.2);
+            r.h = (int)(testTex.ImageData.h * 0.2);
 
             Rect src = new Rect();
             src.x = 0;

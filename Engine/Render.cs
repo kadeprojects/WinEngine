@@ -120,6 +120,7 @@ namespace WinEngine.Engine
             int location = GL.GetUniformLocation(genericShaderProgram, "u_projection");
 
             GL.UniformMatrix4(location, 1, false,ref projectionMatrix.Row0.X);
+
         }
 
         public static List<GLVertex> batchBuffer = new List<GLVertex>();
@@ -135,6 +136,9 @@ namespace WinEngine.Engine
                 batch_texture = tex.TextureId;
                 batch_shader = shader;
             }
+
+            dst.x = dst.x - 640;
+            dst.y = dst.y - 360;
 
             GLVertex vert;
             vert.x = dst.x;
@@ -185,6 +189,9 @@ namespace WinEngine.Engine
         {
             if (batchBuffer.Count != 0)
             {
+                GL.Enable(EnableCap.Blend);
+                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
                 GL.BindTexture(TextureTarget.Texture2D, batch_texture);
                 GL.UseProgram(batch_shader);
 
@@ -199,7 +206,7 @@ namespace WinEngine.Engine
 
                 GL.BufferData(BufferTarget.ArrayBuffer, Marshal.SizeOf<GLVertex>() * verts.Length, verts, BufferUsageHint.StaticDraw);
 
-                GL.DrawArrays(BeginMode.Triangles, 0, verts.Length);
+                GL.DrawArrays(PrimitiveType.Triangles, 0, verts.Length);
 
                 batchBuffer.Clear();
             }
