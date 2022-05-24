@@ -35,7 +35,7 @@ namespace WinEngine.Engine
     public class Render
     {
 
-        public static string generic_shader_vert = @"(
+        public static string generic_shader_vert = @"
         #version 150 core
         in vec2 v_position;
         in vec2 v_uv;
@@ -44,11 +44,11 @@ namespace WinEngine.Engine
         out vec4 f_colour;
         uniform mat4 u_projection;
         void main()
-            {
-                f_uv = v_uv;
-                f_colour = v_colour;
-                gl_Position = u_projection * vec4(v_position.xy, 0.0, 1.0);
-            }";
+        {
+            f_uv = v_uv;
+            f_colour = v_colour;
+            gl_Position = u_projection * vec4(v_position.xy, 0.0, 1.0);
+        }";
         public static string generic_shader_frag = @"
         #version 150 core
         uniform sampler2D u_texture;
@@ -76,14 +76,15 @@ namespace WinEngine.Engine
 
         public static void InitRendering()
         {
-            GL.Enable(EnableCap.VertexArray);
+            GL.GenVertexArrays(1, out VertexArrayObject);
 
-            VertexArrayObject = GL.GenVertexArray();
+            GL.BindVertexArray(VertexArrayObject);
 
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
             GL.EnableVertexAttribArray(2);
-            VertexBufferObject = GL.GenBuffer();
+
+            GL.GenBuffers(1, out VertexBufferObject);
 
             int fragShader;
             int vertShader;
@@ -103,21 +104,22 @@ namespace WinEngine.Engine
             GL.BindAttribLocation(genericShaderProgram, 1, "v_uv");
             GL.BindAttribLocation(genericShaderProgram, 2, "v_color");
 
-            GL.MatrixMode(MatrixMode.Projection);
             projectionMatrix = Matrix4.CreateOrthographic(1280, 720, -1.0f, 1.0f);
-            GL.LoadMatrix(ref projectionMatrix);
 
             GL.LinkProgram(genericShaderProgram);
 
 
             string log = GL.GetProgramInfoLog(genericShaderProgram);
-            Console.WriteLine(log);
+            if (log.Length == 0)
+                Console.WriteLine("Generic Shader successfully compiled!");
+            else
+                Console.WriteLine("Failed to compile Generic Shader: " + log);
 
-            double d = projectionMatrix.M11;
+            GL.UseProgram(genericShaderProgram);
 
             int location = GL.GetUniformLocation(genericShaderProgram, "u_projection");
 
-            GL.UniformMatrix4(location, 1, false,ref d);
+            GL.UniformMatrix4(location, 1, false,ref projectionMatrix.Row0.X);
         }
 
         public static List<GLVertex> batchBuffer = new List<GLVertex>();
@@ -187,23 +189,17 @@ namespace WinEngine.Engine
                 GL.UseProgram(batch_shader);
 
                 GL.BindVertexArray(VertexArrayObject);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
 
                 GLVertex[] verts = batchBuffer.ToArray();
 
-                fixed (GLVertex* data = verts)
-                {
-                    var stride = Marshal.SizeOf<GLVertex>();
-                    GL.VertexPointer(2, VertexPointerType.Float, stride,
-                        IntPtr.Add(new IntPtr(data), 0));
-                    GL.TexCoordPointer(2, TexCoordPointerType.Float, stride,
-                        IntPtr.Add(new IntPtr(data), 8));
-                    GL.ColorPointer(4, ColorPointerType.Float, stride,
-                        IntPtr.Add(new IntPtr(data), 16));
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Marshal.SizeOf<GLVertex>(), Marshal.OffsetOf<GLVertex>("x"));
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Marshal.SizeOf<GLVertex>(), Marshal.OffsetOf<GLVertex>("u"));
+                GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, Marshal.SizeOf<GLVertex>(), Marshal.OffsetOf<GLVertex>("r"));
 
-                    GL.DrawArrays(PrimitiveType.Triangles, 0, verts.Length);
-                }
+                GL.BufferData(BufferTarget.ArrayBuffer, Marshal.SizeOf<GLVertex>() * verts.Length, verts, BufferUsageHint.StaticDraw);
 
-                Console.WriteLine(GL.GetError());
+                GL.DrawArrays(BeginMode.Triangles, 0, verts.Length);
 
                 batchBuffer.Clear();
             }

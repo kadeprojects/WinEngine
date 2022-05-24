@@ -16,6 +16,7 @@ namespace WinEngine.Engine
 
         public Game(GameWindowSettings set, NativeWindowSettings nset) : base(set, nset)
         {
+            Console.WriteLine("Graphics API: " + nset.API + ", Version: " + nset.APIVersion);
         }
 
         protected override void OnLoad()

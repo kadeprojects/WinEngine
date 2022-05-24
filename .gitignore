@@ -1,2 +1,12 @@
 /bin/
 *.dll
+*.txt
+*.editorconfig
+*.pdb
+*.json
+*.props
+*.targets
+*.BuildWithSkipAnalyzers
+*.cache
+*.cache
+*.exe
