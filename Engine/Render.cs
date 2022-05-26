@@ -9,6 +9,8 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using WinEngine.Engine.OpenGL;
 using OpenTK.Mathematics;
+using System.Drawing;
+
 namespace WinEngine.Engine
 {
     public struct Rect
@@ -121,6 +123,8 @@ namespace WinEngine.Engine
 
             GL.UniformMatrix4(location, 1, false,ref projectionMatrix.Row0.X);
 
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
         }
 
         public static List<GLVertex> batchBuffer = new List<GLVertex>();
@@ -189,8 +193,6 @@ namespace WinEngine.Engine
         {
             if (batchBuffer.Count != 0)
             {
-                GL.Enable(EnableCap.Blend);
-                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
                 GL.BindTexture(TextureTarget.Texture2D, batch_texture);
                 GL.UseProgram(batch_shader);
@@ -200,13 +202,17 @@ namespace WinEngine.Engine
 
                 GLVertex[] verts = batchBuffer.ToArray();
 
-                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Marshal.SizeOf<GLVertex>(), Marshal.OffsetOf<GLVertex>("x"));
-                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Marshal.SizeOf<GLVertex>(), Marshal.OffsetOf<GLVertex>("u"));
-                GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, Marshal.SizeOf<GLVertex>(), Marshal.OffsetOf<GLVertex>("r"));
+                int stride = Marshal.SizeOf<GLVertex>();
+
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, stride, Marshal.OffsetOf<GLVertex>("x"));
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, stride, Marshal.OffsetOf<GLVertex>("u"));
+                GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, stride, Marshal.OffsetOf<GLVertex>("r"));
 
                 GL.BufferData(BufferTarget.ArrayBuffer, Marshal.SizeOf<GLVertex>() * verts.Length, verts, BufferUsageHint.StaticDraw);
 
                 GL.DrawArrays(PrimitiveType.Triangles, 0, verts.Length);
+
+                Console.WriteLine("Drawn " + verts.Length + " vertices.");
 
                 batchBuffer.Clear();
             }

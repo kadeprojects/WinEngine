@@ -27,16 +27,20 @@ namespace WinEngine.Engine
 
             Render.InitRendering();
 
+            GL.Enable(EnableCap.CullFace);
+
             testTex = new Texture(new GLImage("test.png"));
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
+            GL.Viewport(new System.Drawing.Rectangle(0, 0, 1280, 720));
             GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.ClearColor(0.4f, 0.4f, 0.4f, 1f);
 
             Rect r = new Rect();
-            r.x = 200;
-            r.y = 100;
+            r.x = 0;
+            r.y = 0;
             r.w = (int)(testTex.ImageData.w * 0.2);
             r.h = (int)(testTex.ImageData.h * 0.2);
 
@@ -50,9 +54,10 @@ namespace WinEngine.Engine
 
             Render.PushBatch();
 
+            base.OnUpdateFrame(e);
+
             Context.SwapBuffers();
 
-            base.OnUpdateFrame(e);
         }
     }
 }
